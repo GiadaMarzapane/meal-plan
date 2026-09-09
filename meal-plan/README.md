@@ -83,8 +83,7 @@ Marco (e con Davide come commensale occasionale, senza account).
 ## Roadmap
 
 1. ✅ **Setup progetto e schema dati** — React+TS+Convex, auth con
-   `@convex-dev/auth` (GitHub + Google), tabelle base con `householdId`
-   condiviso. Manca solo l'inserimento delle credenziali OAuth (vedi *Setup*).
+   `@convex-dev/auth` (Google), tabelle base con `householdId` condiviso.
 2. ✅ **Gestione frigo e scadenze** — CRUD prodotti, badge colorati in base a
    quanto manca alla scadenza (verde oltre 5 giorni, senape entro 5, pomodoro
    se scade oggi o è scaduto).
@@ -141,12 +140,6 @@ sul deployment di sviluppo. Per far funzionare il login servono le credenziali
 OAuth, da creare a mano e impostare così:
 
 ```bash
-# GitHub → Settings › Developer settings › OAuth Apps › New OAuth App
-#   Homepage URL:               http://localhost:5173
-#   Authorization callback URL: https://impressive-okapi-915.eu-west-1.convex.site/api/auth/callback/github
-npx convex env set AUTH_GITHUB_ID <client-id>
-npx convex env set AUTH_GITHUB_SECRET <client-secret>
-
 # Google → console.cloud.google.com › API e servizi › Credenziali › ID client OAuth
 #   Origine JavaScript autorizzata: http://localhost:5173
 #   URI di reindirizzamento:        https://impressive-okapi-915.eu-west-1.convex.site/api/auth/callback/google
@@ -197,20 +190,17 @@ deploy, ed è per questo che i passaggi sono in quest'ordine e non in un altro:
    ```bash
    npx convex env set --prod AUTH_GOOGLE_ID <client-id>
    npx convex env set --prod AUTH_GOOGLE_SECRET <client-secret>
-   npx convex env set --prod AUTH_GITHUB_ID <client-id>
-   npx convex env set --prod AUTH_GITHUB_SECRET <client-secret>
    npx convex env set --prod ANTHROPIC_API_KEY <chiave>
    npx convex env set --prod ANTHROPIC_MODEL claude-sonnet-5
    ```
 
-5. **URI di callback**: nelle OAuth app di Google e GitHub aggiungi quelli di
-   produzione, *senza togliere* quelli di sviluppo — servono entrambi. Il
+5. **URI di callback**: nella OAuth app di Google aggiungi quello di
+   produzione, *senza togliere* quello di sviluppo — servono entrambi. Il
    dominio è il site URL del deployment di **produzione**, diverso da quello di
    dev:
 
    ```
    https://<deployment-prod>.<regione>.convex.site/api/auth/callback/google
-   https://<deployment-prod>.<regione>.convex.site/api/auth/callback/github
    ```
 
    Su Google aggiungi anche `https://<progetto>.vercel.app` fra le origini

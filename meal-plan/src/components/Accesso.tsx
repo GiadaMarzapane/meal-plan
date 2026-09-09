@@ -8,7 +8,7 @@ export function Accesso() {
   const [errore, setErrore] = useState<string | null>(null);
   const [inCorso, setInCorso] = useState<string | null>(null);
 
-  const accedi = (provider: "github" | "google") => {
+  const accedi = (provider: "google") => {
     setErrore(null);
     setInCorso(provider);
     void signIn(provider).catch((e: unknown) => {
@@ -33,14 +33,6 @@ export function Accesso() {
         <button
           type="button"
           className="bottone bottone--primario"
-          disabled={inCorso !== null}
-          onClick={() => { accedi("github"); }}
-        >
-          {inCorso === "github" ? "Apro GitHub…" : "Entra con GitHub"}
-        </button>
-        <button
-          type="button"
-          className="bottone"
           disabled={inCorso !== null}
           onClick={() => { accedi("google"); }}
         >
