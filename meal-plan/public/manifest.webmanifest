@@ -1,0 +1,16 @@
+{
+  "name": "Dispensa — menu, spesa e frigo",
+  "short_name": "Dispensa",
+  "description": "Pianifica i menu settimanali per stagione e commensali, genera la lista della spesa e tieni d'occhio le scadenze del frigo.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2E8D5",
+  "theme_color": "#C1432B",
+  "icons": [
+    { "src": "/icona.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icona-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

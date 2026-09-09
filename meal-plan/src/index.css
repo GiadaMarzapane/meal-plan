@@ -1,111 +1,541 @@
+/* ---------------------------------------------------------------------------
+   Design system "scontrino di mercato".
+   Tutti i valori vivono qui: sostituire questi token allinea l'intera app
+   al mockup di Claude Design senza toccare i componenti.
+   --------------------------------------------------------------------------- */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* Colori */
+  --sfondo: #f2e8d5;
+  --sfondo-carta: #faf4e8;
+  --testo: #2b2622;
+  --testo-tenue: #6f6558;
+  --pomodoro: #c1432b;
+  --senape: #d9a02c;
+  --salvia: #5f7350;
+  --bordo: #d8cbb4;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* Tipografia */
+  /* Gaegu è scritto a mano e ha un'altezza della x molto bassa: alla stessa
+     misura in pixel si legge parecchio più piccolo di un grottesco. Le misure
+     dei titoli qui sotto sono già compensate. */
+  --font-ui: "Gaegu", ui-rounded, "Comic Sans MS", ui-sans-serif, system-ui, sans-serif;
+  --font-dati: "IBM Plex Mono", "Courier Prime", ui-monospace, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Forma: poco arrotondamento, bordi netti, niente ombre */
+  --raggio: 3px;
+  --spazio: 8px;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  color-scheme: light;
+  font-family: var(--font-ui);
+  color: var(--testo);
+  background-color: var(--sfondo);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+* {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  background: var(--sfondo);
+  color: var(--testo);
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* I nomi di prodotti e ricette sono scritti a mano come i titoli: senza
+   questo ereditavano il grassetto sintetico del tag <strong>. */
+strong {
+  font-weight: 700;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+h1, h2, h3 {
+  /* Gaegu ha solo 300/400/700: chiedere 600 farebbe sintetizzare il grassetto. */
+  font-weight: 700;
+  letter-spacing: 0;
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+h1 { font-size: 2rem; line-height: 1.15; }
+h2 { font-size: 1.45rem; line-height: 1.2; }
+h3 { font-size: 1.2rem; }
+
+/* --- Layout ---------------------------------------------------------------- */
+.app {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--sfondo);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.intestazione {
+  padding: calc(var(--spazio) * 2);
+  border-bottom: 1px dashed var(--bordo);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spazio);
+}
+
+/* Nell'app i titoli sono frasi ("Cosa posso cucinare adesso"), non una parola
+   sola come nella schermata d'accesso: a 2rem manderebbero l'intestazione su
+   tre righe. */
+.intestazione h1 {
+  font-size: 1.6rem;
+}
+
+.intestazione .marchio {
+  font-family: var(--font-dati);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  color: var(--testo-tenue);
+}
+
+.contenuto {
+  flex: 1;
+  padding: calc(var(--spazio) * 2);
+  padding-bottom: calc(var(--spazio) * 12);
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spazio) * 2);
+}
+
+/* Navigazione a fondo schermo, stile PWA */
+.barra-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: var(--sfondo-carta);
+  border-top: 1px dashed var(--bordo);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.barra-nav__interno {
+  display: flex;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.barra-nav button {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: calc(var(--spazio) * 1.5) var(--spazio);
+  font-family: var(--font-dati);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--testo-tenue);
+  cursor: pointer;
+  border-top: 2px solid transparent;
+}
+
+.barra-nav button[aria-current="page"] {
+  color: var(--pomodoro);
+  border-top-color: var(--pomodoro);
+}
+
+/* --- Carta / scontrino ----------------------------------------------------- */
+.carta {
+  background: var(--sfondo-carta);
+  border: 1px dashed var(--bordo);
+  border-radius: var(--raggio);
+  padding: calc(var(--spazio) * 1.5);
+}
+
+.carta--fitta { padding: var(--spazio) calc(var(--spazio) * 1.5); }
+
+.separatore {
+  border: none;
+  border-top: 1px dashed var(--bordo);
+  margin: var(--spazio) 0;
+}
+
+.riga {
+  display: flex;
+  align-items: center;
+  gap: var(--spazio);
+}
+
+.riga--tra { justify-content: space-between; }
+.riga--avvolgi { flex-wrap: wrap; }
+
+.colonna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spazio);
+}
+
+.dati {
+  font-family: var(--font-dati);
+  font-size: 0.85rem;
+}
+
+.tenue { color: var(--testo-tenue); }
+.piccolo { font-size: 0.75rem; }
+.crescente { flex: 1; min-width: 0; }
+
+/* --- Controlli ------------------------------------------------------------- */
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+.bottone {
+  font-family: var(--font-dati);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: calc(var(--spazio) * 1.25) calc(var(--spazio) * 2);
+  border: 1px solid var(--testo);
+  border-radius: var(--raggio);
+  background: var(--sfondo-carta);
+  cursor: pointer;
+}
+
+.bottone:hover:not(:disabled) { background: var(--sfondo); }
+.bottone:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.bottone--primario {
+  background: var(--pomodoro);
+  border-color: var(--pomodoro);
+  color: #fff;
+}
+.bottone--primario:hover:not(:disabled) { background: #a83924; }
+
+.bottone--fantasma {
+  border-style: dashed;
+  border-color: var(--bordo);
+  background: transparent;
+}
+
+.bottone--piccolo {
+  padding: calc(var(--spazio) * 0.75) var(--spazio);
+  font-size: 0.7rem;
+}
+
+.bottone--icona {
+  border: none;
+  background: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: var(--testo-tenue);
+  font-family: var(--font-dati);
+}
+.bottone--icona:hover { color: var(--pomodoro); }
+
+/* Variante testuale, per azioni scritte a parole invece che con un simbolo */
+.bottone--testo {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.campo > span {
+  font-family: var(--font-dati);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--testo-tenue);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: calc(var(--spazio) * 1.1);
+  background: var(--sfondo-carta);
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  font-family: var(--font-dati);
+  font-size: 0.85rem;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--salvia);
+  outline-offset: 1px;
+}
+
+.griglia-campi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spazio);
+}
+
+/* --- Badge ----------------------------------------------------------------- */
+.badge {
+  font-family: var(--font-dati);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: var(--raggio);
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.badge--ok { color: var(--salvia); }
+.badge--attenzione { color: var(--senape); }
+.badge--urgente { color: var(--pomodoro); }
+.badge--neutro { color: var(--testo-tenue); }
+
+.badge--pieno.badge--urgente { background: var(--pomodoro); color: #fff; border-color: var(--pomodoro); }
+.badge--pieno.badge--attenzione { background: var(--senape); color: var(--testo); border-color: var(--senape); }
+.badge--pieno.badge--ok { background: var(--salvia); color: #fff; border-color: var(--salvia); }
+
+.etichetta {
+  font-family: var(--font-dati);
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border: 1px dashed var(--bordo);
+  border-radius: var(--raggio);
+  color: var(--testo-tenue);
+}
+
+/* --- Liste ----------------------------------------------------------------- */
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lista > li {
+  padding: calc(var(--spazio) * 1.25) 0;
+  border-bottom: 1px dashed var(--bordo);
+  display: flex;
+  align-items: center;
+  gap: var(--spazio);
+}
+
+.lista > li:last-child { border-bottom: none; }
+
+.voce-presa .nome-voce {
+  text-decoration: line-through;
+  color: var(--testo-tenue);
+}
+
+.spunta {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  border: 1px solid var(--testo);
+  border-radius: var(--raggio);
+  background: var(--sfondo-carta);
+  cursor: pointer;
+  font-family: var(--font-dati);
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0;
+  color: var(--pomodoro);
+}
+
+/* --- Pianificatore --------------------------------------------------------- */
+.giorno {
+  border: 1px dashed var(--bordo);
+  border-radius: var(--raggio);
+  background: var(--sfondo-carta);
+}
+
+.giorno__testata {
+  padding: var(--spazio) calc(var(--spazio) * 1.5);
+  border-bottom: 1px dashed var(--bordo);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-dati);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.giorno--oggi { border-color: var(--pomodoro); border-style: solid; }
+.giorno--oggi .giorno__testata { color: var(--pomodoro); }
+
+.slot {
+  padding: calc(var(--spazio) * 1.25) calc(var(--spazio) * 1.5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spazio);
+  border-bottom: 1px dashed var(--bordo);
+}
+.slot:last-child { border-bottom: none; }
+.slot--fuori { opacity: 0.6; }
+
+.slot__titolo {
+  font-family: var(--font-dati);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--testo-tenue);
+}
+
+.gruppo-stato { display: flex; gap: 4px; }
+
+.gruppo-stato button {
+  flex: 1;
+  font-family: var(--font-dati);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 4px;
+  border: 1px dashed var(--bordo);
+  border-radius: var(--raggio);
+  background: transparent;
+  color: var(--testo-tenue);
+  cursor: pointer;
+}
+
+.gruppo-stato button[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--testo);
+  color: var(--testo);
+  background: var(--sfondo);
+}
+
+.chip-commensale {
+  font-family: var(--font-dati);
+  font-size: 0.68rem;
+  padding: 3px 8px;
+  border: 1px dashed var(--bordo);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--testo-tenue);
+  cursor: pointer;
+}
+
+.chip-commensale[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--salvia);
+  color: var(--salvia);
+}
+
+/* --- Vuoto / avvisi -------------------------------------------------------- */
+.vuoto {
+  text-align: center;
+  padding: calc(var(--spazio) * 3) var(--spazio);
+  color: var(--testo-tenue);
+  font-family: var(--font-dati);
+  font-size: 0.8rem;
+  border: 1px dashed var(--bordo);
+  border-radius: var(--raggio);
+}
+
+.errore {
+  font-family: var(--font-dati);
+  font-size: 0.78rem;
+  color: var(--pomodoro);
+  border: 1px solid var(--pomodoro);
+  border-radius: var(--raggio);
+  padding: var(--spazio);
+}
+
+.centrato {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--spazio) * 2);
+  padding: calc(var(--spazio) * 3);
+  text-align: center;
+}
+
+.centrato .carta { width: 100%; max-width: 380px; text-align: left; }
+
+/* --- Porzioni per commensale ----------------------------------------------- */
+.commensale {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.porzioni {
+  display: inline-flex;
+  border: 1px dashed var(--bordo);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.porzioni button {
+  border: none;
+  background: transparent;
+  color: var(--testo-tenue);
+  font-family: var(--font-dati);
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 4px 7px;
+  cursor: pointer;
+}
+
+.porzioni button:hover:not(:disabled) { color: var(--pomodoro); }
+.porzioni button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* --- Riepilogo macro per chi segue una dieta ------------------------------- */
+.riepilogo-macro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--spazio);
+  padding: var(--spazio) calc(var(--spazio) * 1.5);
+  border-top: 1px dashed var(--bordo);
+  font-family: var(--font-dati);
+  font-size: 0.72rem;
+}
+
+.riepilogo-macro__nome {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--testo-tenue);
+}
+
+.macro {
+  padding: 2px 6px;
+  border: 1px solid currentColor;
+  border-radius: var(--raggio);
+  white-space: nowrap;
+}
+
+.macro--vicino { color: var(--salvia); }
+.macro--sotto { color: var(--senape); }
+.macro--sopra { color: var(--pomodoro); }
+.macro--ignoto { color: var(--testo-tenue); border-style: dashed; }
+
+/* Etichetta che è anche un comando (es. "ce l'ho già") */
+.etichetta--azione {
+  cursor: pointer;
+  background: transparent;
+  font-family: var(--font-dati);
+}
+
+.etichetta--azione:hover {
+  border-style: solid;
+  border-color: var(--salvia);
+  color: var(--salvia);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.5;
 }
