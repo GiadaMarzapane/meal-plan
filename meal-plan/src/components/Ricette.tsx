@@ -294,12 +294,12 @@ function VoceRicetta({ ricetta }: { ricetta: Doc<"ricette"> }) {
       <div className="riga">
         <button
           type="button"
-          className="bottone--icona crescente"
+          className="bottone--icona bottone--ui crescente"
           style={{ textAlign: "left" }}
           aria-expanded={aperta}
           onClick={() => { setAperta((v) => !v); }}
         >
-          <strong style={{ color: "var(--testo)" }}>{ricetta.nome}</strong>
+          <strong>{ricetta.nome}</strong>
           <span className="dati tenue piccolo">
             {" "}
             · {ricetta.porzioni} porz.
@@ -427,32 +427,33 @@ function ProposteAI() {
 
   return (
     <Carta titolo="Proposte di Claude">
-      <p className="dati tenue piccolo">
-        Parte da quello che hai in casa e non usi. Le proposte non entrano in
-        catalogo da sole: le aggiungi tu, una alla volta.
-      </p>
-      <input
-        type="text"
-        value={richiesta}
-        placeholder="Facoltativo: “pranzi freddi da ufficio”, “usa la feta”…"
-        onChange={(e) => { setRichiesta(e.target.value); }}
-      />
-      <button
-        type="button"
-        className="bottone bottone--fantasma bottone--piccolo"
-        disabled={inCorso}
-        onClick={chiedi}
-      >
-        {inCorso ? "Ci penso…" : "✳ Proponi 5 ricette (a pagamento)"}
-      </button>
+      <div className="colonna">
+        <p className="dati tenue piccolo">
+          Parte da quello che hai in casa e non usi. Le proposte non entrano in
+          catalogo da sole: le aggiungi tu, una alla volta.
+        </p>
+        <input
+          type="text"
+          value={richiesta}
+          placeholder="Facoltativo: “pranzi freddi da ufficio”, “usa la feta”…"
+          onChange={(e) => { setRichiesta(e.target.value); }}
+        />
+        <button
+          type="button"
+          className="bottone bottone--fantasma bottone--piccolo"
+          disabled={inCorso}
+          onClick={chiedi}
+        >
+          {inCorso ? "Ci penso…" : "✳ Proponi 5 ricette (a pagamento)"}
+        </button>
 
-      <Errore messaggio={errore} />
-      {avviso !== null && <span className="dati tenue piccolo">{avviso}</span>}
+        <Errore messaggio={errore} />
+        {avviso !== null && <span className="dati tenue piccolo">{avviso}</span>}
 
-      {proposte?.map((proposta) => {
-        const giaAggiunta = aggiunte.includes(proposta.nome);
-        return (
-          <div className="carta colonna" key={proposta.nome}>
+        {proposte?.map((proposta) => {
+          const giaAggiunta = aggiunte.includes(proposta.nome);
+          return (
+            <div className="carta colonna" key={proposta.nome}>
             <div className="riga riga--tra">
               <strong className="crescente">{proposta.nome}</strong>
               <span className="dati tenue piccolo">
@@ -498,6 +499,7 @@ function ProposteAI() {
           </div>
         );
       })}
+      </div>
     </Carta>
   );
 }
@@ -549,7 +551,7 @@ export function Ricette() {
       <ProposteAI />
 
       <Carta
-        titolo="Ricette"
+        titolo="Ricettario"
         azione={
           <button
             type="button"

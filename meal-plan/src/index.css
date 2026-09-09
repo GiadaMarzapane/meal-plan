@@ -232,6 +232,15 @@ button, input, select, textarea {
 }
 .bottone--icona:hover { color: var(--pomodoro); }
 
+/* Nome cliccabile in elenco: stesso font dei titoli, non il mono dei dati.
+   Gaegu si legge piccolo: 1.25rem è vicino a un h3 già compensato. */
+.bottone--ui {
+  font-family: var(--font-ui);
+  color: var(--testo);
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
 /* Variante testuale, per azioni scritte a parole invece che con un simbolo */
 .bottone--testo {
   font-size: 0.7rem;
