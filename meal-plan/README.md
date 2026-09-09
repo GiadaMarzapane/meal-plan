@@ -164,6 +164,98 @@ Con audience *External* in stato *Testing*, Google lascia entrare solo gli
 account elencati come utenti di test: vanno aggiunti sia il tuo che quello di
 Marco.
 
+## Andare in produzione (Vercel + Convex)
+
+Il frontend sta su Vercel, il backend sul deployment di produzione di Convex.
+`vercel.json` è già configurato: il comando di build è
+`npx convex deploy --cmd 'npm run build'`, che in un colpo solo pubblica le
+funzioni Convex su produzione, si fa dare da Convex la `VITE_CONVEX_URL` giusta
+e costruisce il frontend con quella dentro.
+
+**Il repo ha l'app in una sottocartella**, quindi su Vercel va impostata la
+*Root Directory* su `meal-plan`, altrimenti non trova il `package.json`.
+
+Nell'ordine — le prime due date non si conoscono prima di aver fatto il primo
+deploy, ed è per questo che i passaggi sono in quest'ordine e non in un altro:
+
+1. **Chiave di deploy**: dashboard Convex → il progetto → Settings → Deploy Keys
+   → genera quella di *produzione*.
+2. **Vercel**: importa il repo, Root Directory `meal-plan`, e aggiungi la
+   variabile d'ambiente `CONVEX_DEPLOY_KEY` con quella chiave. Fai il primo
+   deploy: fallirà l'autenticazione dell'app, ma crea il deployment di
+   produzione Convex e ti assegna un dominio `...vercel.app`.
+3. **Chiavi di firma su produzione** — usa il dominio Vercel del passo 2:
+
+   ```bash
+   npx @convex-dev/auth --prod --web-server-url https://<progetto>.vercel.app
+   ```
+
+   Imposta `SITE_URL`, `JWT_PRIVATE_KEY` e `JWKS` sul deployment di produzione.
+
+4. **Credenziali OAuth e chiave API su produzione**:
+
+   ```bash
+   npx convex env set --prod AUTH_GOOGLE_ID <client-id>
+   npx convex env set --prod AUTH_GOOGLE_SECRET <client-secret>
+   npx convex env set --prod AUTH_GITHUB_ID <client-id>
+   npx convex env set --prod AUTH_GITHUB_SECRET <client-secret>
+   npx convex env set --prod ANTHROPIC_API_KEY <chiave>
+   npx convex env set --prod ANTHROPIC_MODEL claude-sonnet-5
+   ```
+
+5. **URI di callback**: nelle OAuth app di Google e GitHub aggiungi quelli di
+   produzione, *senza togliere* quelli di sviluppo — servono entrambi. Il
+   dominio è il site URL del deployment di **produzione**, diverso da quello di
+   dev:
+
+   ```
+   https://<deployment-prod>.<regione>.convex.site/api/auth/callback/google
+   https://<deployment-prod>.<regione>.convex.site/api/auth/callback/github
+   ```
+
+   Su Google aggiungi anche `https://<progetto>.vercel.app` fra le origini
+   JavaScript autorizzate.
+
+6. **Ridistribuisci** da Vercel. Le variabili Convex si leggono a runtime, quindi
+   non serve ripubblicare il backend dopo il passo 4.
+
+7. **Il database di produzione parte vuoto.** Non è una copia di quello di
+   sviluppo: household, ricette, dispensa e categorie non ci sono. Dopo il primo
+   login su produzione crea il gruppo dall'app (le categorie arrivano da sole),
+   recupera l'id del nuovo household e semina il resto:
+
+   ```bash
+   npx convex data --prod households                     # per leggere l'id
+   npx convex run --prod seed:ricette   '{"householdId": "<id-prod>"}'
+   npx convex run --prod seed:dispensa  '{"householdId": "<id-prod>"}'
+   ```
+
+   Oppure non seminare niente e inserire le cose vere a mano: il seed nasce come
+   dato di partenza per provare, non come contenuto definitivo.
+
+### Chiave di deploy e ambienti Vercel
+
+`CONVEX_DEPLOY_KEY` va impostata **solo sull'ambiente Production**. Se la si
+lascia anche su Preview, ogni build di un branch pubblicherebbe le proprie
+funzioni e il proprio schema sul deployment di *produzione*. Per avere anche le
+preview funzionanti serve una preview deploy key separata, generata a parte.
+
+### Chi può entrare (Google)
+
+L'OAuth app di Google ha uno stato di pubblicazione, e per un'app di casa la
+scelta giusta è **restare in *Testing***:
+
+- **Testing**: entrano solo gli account elencati come utenti di test, fino a
+  100. È una lista di autorizzazione — esattamente quello che serve a un'app
+  privata.
+- **In produzione**: entra chiunque abbia un account Google. Per gli scope
+  di base (email e profilo) non serve la verifica di Google, quindi si può
+  pubblicare senza review; la verifica riguarda gli scope sensibili (Gmail,
+  Drive...), che questa app non chiede.
+
+Pubblicare vorrebbe dire lasciare che chiunque crei un household dentro il tuo
+deployment. Per Davide non serve comunque nulla: è un commensale senza account.
+
 ### Come si condivide con Marco
 
 Chi crea il gruppo trova il **codice invito** nella scheda *Gruppo*. Marco fa
