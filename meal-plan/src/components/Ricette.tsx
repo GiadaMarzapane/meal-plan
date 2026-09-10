@@ -303,6 +303,7 @@ function VoceRicetta({ ricetta }: { ricetta: Doc<"ricette"> }) {
           <span className="dati tenue piccolo">
             {" "}
             · {ricetta.porzioni} porz.
+            {ricetta.tempoMinuti !== undefined && ` · ${String(ricetta.tempoMinuti)} min`}
           </span>
         </button>
         <button
@@ -361,6 +362,13 @@ function VoceRicetta({ ricetta }: { ricetta: Doc<"ricette"> }) {
                 );
               })}
             </div>
+          )}
+          {ricetta.preparazione !== undefined && ricetta.preparazione.length > 0 && (
+            <ol className="passaggi">
+              {ricetta.preparazione.map((passo) => (
+                <li key={passo}>{passo}</li>
+              ))}
+            </ol>
           )}
         </>
       )}

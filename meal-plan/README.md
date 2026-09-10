@@ -420,6 +420,40 @@ il limite che il generatore con AI aggira.
 **La soglia di urgenza è fissa a 5 giorni** (`GIORNI_URGENZA` in `convex/lib.ts`).
 Un prodotto che scade fra 7 giorni non riceve il peso triplo.
 
+## Catalogo ricette importato
+
+`convex/seedData/ricetteCatalogo.ts` contiene 45 ricette (13 colazioni, 20
+pranzi, 12 cene) convertite da un catalogo esterno. La conversione non è stata
+una copia: il modello di origine era diverso, e le scelte fatte sono queste.
+
+- **Solo la versione normocalorica.** L'origine aveva due liste di ingredienti
+  per ricetta, normocalorica e ipocalorica. Il nostro schema ne regge una sola,
+  quindi l'ipocalorica è stata scartata. Le quantità sono **per una persona**
+  (`porzioni: 1`), e l'app le scala sui commensali dello slot.
+- **Stagioni tradotte in mesi.** `"autunno"` diventa settembre/ottobre/novembre,
+  `"tutto_anno"` diventa l'elenco vuoto, che nella nostra convenzione vuol dire
+  "va bene sempre".
+- **10 ricette riscritte.** Contenevano tofu, tempeh, cous cous o smoothie, che
+  le preferenze di casa escludono esplicitamente. Sono state rifatte con
+  legumi, uova e latticini (ceci al posto del tofu, riso o farro al posto del
+  cous cous, feta o frittata dove serviva una proteina non animale).
+- **`q.b.` resta senza numero.** L'origine gli assegnava `quantita: 1`, che non
+  significa niente: qui l'ingrediente è salvato senza quantità, così la lista
+  della spesa non prova a sommarlo.
+- **`alternativaDi` non è stato importato.** Nell'origine collegava ogni
+  ricetta vegana alla sua versione onnivora, ma l'app non ha ancora una UI che
+  proponga lo scambio: sarebbe un campo senza lettori. Il collegamento resta
+  nei file di partenza se un domani servisse.
+
+Il seed è idempotente sullo `slug`: rilanciarlo non duplica, e con
+`{"aggiorna": true}` riallinea le ricette già importate al file. Le ricette
+scritte a mano dall'app non hanno slug e non vengono mai toccate.
+
+```bash
+npx convex run seed:catalogo '{"householdId": "<id>"}'
+npx convex run --prod seed:catalogo '{"householdId": "<id-prod>"}'
+```
+
 ## Diete e valori nutrizionali
 
 Pensato per chi in casa segue una dieta con grammature da rispettare.
@@ -479,7 +513,8 @@ Design.
   archiviazione nello storico.
 - `spesa.ts` — lista condivisa e generazione automatica.
 - `seedData/` — dati statici di partenza: calendario di stagionalità delle
-  verdure in Italia mese per mese, categorie del frigo, ricette di esempio.
+  verdure in Italia mese per mese, categorie del frigo, ricette di esempio e
+  `ricetteCatalogo.ts`, il catalogo importato (vedi sotto).
 
 **Frontend (`src/`)**
 

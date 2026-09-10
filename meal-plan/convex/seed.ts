@@ -3,6 +3,7 @@ import { internalMutation } from "./_generated/server";
 import { normalizzaNome } from "./lib";
 import { categorieBase } from "./seedData/categorieBase";
 import { dispensaIniziale } from "./seedData/dispensaIniziale";
+import { ricetteCatalogo } from "./seedData/ricetteCatalogo";
 import { ricetteEsempio } from "./seedData/ricetteEsempio";
 
 /**
@@ -118,5 +119,52 @@ export const dispensa = internalMutation({
       allineati,
       invariati: dispensaIniziale.length - create - allineati,
     };
+  },
+});
+
+/**
+ * Importa il catalogo ricette convertito da `seedData/ricetteCatalogo.ts`.
+ * Idempotente sullo `slug`: rilanciarla aggiorna le ricette già importate
+ * invece di duplicarle, e non tocca quelle scritte a mano (che slug non ne
+ * hanno).
+ *
+ *   npx convex run seed:catalogo '{"householdId": "<id>"}'
+ *   npx convex run --prod seed:catalogo '{"householdId": "<id>"}'
+ */
+export const catalogo = internalMutation({
+  args: { householdId: v.id("households"), aggiorna: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const esistenti = await ctx.db
+      .query("ricette")
+      .withIndex("by_household", (q) => q.eq("householdId", args.householdId))
+      .collect();
+
+    const perSlug = new Map(
+      esistenti.filter((r) => r.slug !== undefined).map((r) => [r.slug, r])
+    );
+    const perNome = new Map(esistenti.map((r) => [normalizzaNome(r.nome), r]));
+
+    let create = 0;
+    let aggiornate = 0;
+    let saltate = 0;
+
+    for (const ricetta of ricetteCatalogo) {
+      const gia =
+        perSlug.get(ricetta.slug) ?? perNome.get(normalizzaNome(ricetta.nome));
+
+      if (gia === undefined) {
+        await ctx.db.insert("ricette", { householdId: args.householdId, ...ricetta });
+        create++;
+        continue;
+      }
+      if (args.aggiorna === true) {
+        await ctx.db.patch(gia._id, ricetta);
+        aggiornate++;
+      } else {
+        saltate++;
+      }
+    }
+
+    return { create, aggiornate, saltate, totale: ricetteCatalogo.length };
   },
 });

@@ -11,6 +11,8 @@ const campiRicetta = {
   pastiAdatti: v.optional(v.array(tipoPasto)),
   macro: v.optional(macro),
   stagioni: v.array(v.string()),
+  tempoMinuti: v.optional(v.number()),
+  preparazione: v.optional(v.array(v.string())),
   note: v.optional(v.string()),
 };
 

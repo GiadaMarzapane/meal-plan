@@ -95,6 +95,10 @@ export default defineSchema({
   // Catalogo ricette/piatti
   ricette: defineTable({
     householdId: v.id("households"),
+    // Identificatore stabile delle ricette che arrivano da un catalogo: serve
+    // a riseminare senza duplicare anche se il nome cambia. Le ricette scritte
+    // a mano dall'app non ce l'hanno.
+    slug: v.optional(v.string()),
     nome: v.string(),
     tags: v.array(v.string()), // es. ["vegetariano", "veloce", "leggero"]
     ingredienti: v.array(ingrediente),
@@ -103,6 +107,8 @@ export default defineSchema({
     pastiAdatti: v.optional(v.array(tipoPasto)),
     macro: v.optional(macro), // per porzione
     stagioni: v.array(v.string()), // mesi, es. ["settembre", "ottobre"]; vuoto = sempre
+    tempoMinuti: v.optional(v.number()),
+    preparazione: v.optional(v.array(v.string())), // passaggi in ordine
     note: v.optional(v.string()),
   }).index("by_household", ["householdId"]),
 

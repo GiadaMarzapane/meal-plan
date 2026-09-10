@@ -23,6 +23,7 @@ import type * as ricetteAI from "../ricetteAI.js";
 import type * as seed from "../seed.js";
 import type * as seedData_categorieBase from "../seedData/categorieBase.js";
 import type * as seedData_dispensaIniziale from "../seedData/dispensaIniziale.js";
+import type * as seedData_ricetteCatalogo from "../seedData/ricetteCatalogo.js";
 import type * as seedData_ricetteEsempio from "../seedData/ricetteEsempio.js";
 import type * as seedData_verdureStagionali from "../seedData/verdureStagionali.js";
 import type * as spesa from "../spesa.js";
@@ -50,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   "seedData/categorieBase": typeof seedData_categorieBase;
   "seedData/dispensaIniziale": typeof seedData_dispensaIniziale;
+  "seedData/ricetteCatalogo": typeof seedData_ricetteCatalogo;
   "seedData/ricetteEsempio": typeof seedData_ricetteEsempio;
   "seedData/verdureStagionali": typeof seedData_verdureStagionali;
   spesa: typeof spesa;

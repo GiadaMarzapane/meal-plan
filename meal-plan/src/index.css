@@ -548,3 +548,19 @@ textarea {
   min-height: 120px;
   line-height: 1.5;
 }
+
+/* Passaggi di preparazione: numerati, con il numero in monospace come i dati */
+.passaggi {
+  margin: 0;
+  padding-left: 1.5em;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.passaggi li::marker {
+  font-family: var(--font-dati);
+  font-size: 0.75rem;
+  color: var(--testo-tenue);
+}
