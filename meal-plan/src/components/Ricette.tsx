@@ -62,6 +62,12 @@ function ModuloRicetta({
     carboidrati: ricetta?.macro?.carboidrati?.toString() ?? "",
     grassi: ricetta?.macro?.grassi?.toString() ?? "",
   }));
+  const [tempoMinuti, setTempoMinuti] = useState(
+    ricetta?.tempoMinuti?.toString() ?? ""
+  );
+  const [preparazione, setPreparazione] = useState(
+    ricetta?.preparazione?.join("\n") ?? ""
+  );
   const [errore, setErrore] = useState<string | null>(null);
 
   const cambiaRiga = (indice: number, campo: keyof RigaIngrediente, valore: string) => {
@@ -119,6 +125,14 @@ function ModuloRicetta({
       stagioni,
       pastiAdatti,
       ingredienti,
+      tempoMinuti: (() => {
+        const valore = Number.parseInt(tempoMinuti, 10);
+        return Number.isFinite(valore) && valore > 0 ? valore : undefined;
+      })(),
+      preparazione: preparazione
+        .split("\n")
+        .map((passo) => passo.trim())
+        .filter((passo) => passo !== ""),
       // La nota non è nel modulo: la ricopio per non cancellarla salvando.
       note: ricetta?.note,
     };
@@ -197,6 +211,24 @@ function ModuloRicetta({
           + Ingrediente
         </button>
       </div>
+
+      <Campo etichetta="Tempo di preparazione (minuti, facoltativo)">
+        <input
+          type="number"
+          min="1"
+          value={tempoMinuti}
+          placeholder="30"
+          onChange={(e) => { setTempoMinuti(e.target.value); }}
+        />
+      </Campo>
+
+      <Campo etichetta="Procedimento (un passaggio per riga)">
+        <textarea
+          value={preparazione}
+          placeholder={"Taglia le verdure.\nCuocile in padella per 10 minuti.\nServi caldo."}
+          onChange={(e) => { setPreparazione(e.target.value); }}
+        />
+      </Campo>
 
       <div className="campo">
         <span>A quali pasti (nessuno = va bene per tutti)</span>
@@ -370,6 +402,9 @@ function VoceRicetta({ ricetta }: { ricetta: Doc<"ricette"> }) {
               ))}
             </ol>
           )}
+          {(ricetta.preparazione === undefined || ricetta.preparazione.length === 0) && (
+            <p className="dati tenue piccolo">Procedimento non ancora inserito.</p>
+          )}
         </>
       )}
     </li>
@@ -383,6 +418,8 @@ type Proposta = {
   pastiAdatti: ("colazione" | "pranzo" | "cena")[];
   stagioni: string[];
   ingredienti: { nome: string; quantita: number; unita: string }[];
+  tempoMinuti: number;
+  preparazione: string[];
   perche: string;
 };
 
@@ -428,6 +465,8 @@ function ProposteAI() {
       pastiAdatti: proposta.pastiAdatti,
       stagioni: proposta.stagioni,
       ingredienti: proposta.ingredienti,
+      tempoMinuti: proposta.tempoMinuti,
+      preparazione: proposta.preparazione,
     })
       .then(() => { setAggiunte((p) => [...p, proposta.nome]); })
       .catch((e: unknown) => { setErrore(messaggioErrore(e)); });
@@ -465,7 +504,7 @@ function ProposteAI() {
             <div className="riga riga--tra">
               <strong className="crescente">{proposta.nome}</strong>
               <span className="dati tenue piccolo">
-                per {proposta.porzioni}
+                per {proposta.porzioni} · {proposta.tempoMinuti} min
               </span>
             </div>
             <span className="dati tenue piccolo">{proposta.perche}</span>
@@ -496,6 +535,11 @@ function ProposteAI() {
                 </li>
               ))}
             </ul>
+            <ol className="passaggi">
+              {proposta.preparazione.map((passo, indice) => (
+                <li key={`${String(indice)}-${passo}`}>{passo}</li>
+              ))}
+            </ol>
             <button
               type="button"
               className="bottone bottone--piccolo"
@@ -516,6 +560,7 @@ export function Ricette() {
   const meseCorrente = meseDiIso(oggiIso());
   const [soloStagionali, setSoloStagionali] = useState(false);
   const [apriModulo, setApriModulo] = useState(false);
+  const [ricerca, setRicerca] = useState("");
 
   const ricette = useQuery(
     api.ricette.lista,
@@ -533,6 +578,16 @@ export function Ricette() {
       ...(ricette ?? []).flatMap((r) => r.ingredienti.map((i) => i.nome)),
     ]),
   ].sort((a, b) => a.localeCompare(b, "it"));
+
+  const paroleRicerca = ricerca.trim().toLocaleLowerCase("it").split(/\s+/).filter(Boolean);
+  const ricetteFiltrate = (ricette ?? []).filter((ricetta) => {
+    const testo = [
+      ricetta.nome,
+      ...ricetta.tags,
+      ...ricetta.ingredienti.map((ingrediente) => ingrediente.nome),
+    ].join(" ").toLocaleLowerCase("it");
+    return paroleRicerca.every((parola) => testo.includes(parola));
+  });
 
   return (
     <>
@@ -597,17 +652,27 @@ export function Ricette() {
           </button>
         </div>
 
+        <input
+          type="search"
+          value={ricerca}
+          aria-label="Cerca nel ricettario"
+          placeholder="Cerca per nome, ingrediente o tag…"
+          onChange={(e) => { setRicerca(e.target.value); }}
+        />
+
         {ricette === undefined ? (
           <p className="dati tenue">Carico…</p>
-        ) : ricette.length === 0 ? (
+        ) : ricetteFiltrate.length === 0 ? (
           <Vuoto>
-            {soloStagionali
+            {ricerca.trim() !== ""
+              ? `Nessuna ricetta trovata per “${ricerca.trim()}”.`
+              : soloStagionali
               ? `Nessuna ricetta di stagione per ${meseCorrente}.`
               : "Nessuna ricetta in catalogo."}
           </Vuoto>
         ) : (
           <ul className="lista">
-            {ricette.map((ricetta) => (
+            {ricetteFiltrate.map((ricetta) => (
               <VoceRicetta key={ricetta._id} ricetta={ricetta} />
             ))}
           </ul>

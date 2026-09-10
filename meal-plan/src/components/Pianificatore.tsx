@@ -1,5 +1,5 @@
 import { useAction, useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import { etichettaGiorno, isoPiuGiorni, lunediDi, meseDiIso, oggiIso } from "../lib/date";
@@ -13,6 +13,7 @@ import {
   scostamento,
 } from "../lib/macro";
 import { Carta, Errore, Vuoto } from "./ui";
+import { formattaQuantita } from "../lib/quantita";
 
 const STATI = [
   { valore: "da_pianificare", etichetta: "Da fare" },
@@ -27,6 +28,127 @@ type Commensale = { nome: string; porzioni: number };
 /** Passo dello stepper: mezze porzioni bastano per una dieta di casa. */
 const PASSO_PORZIONI = 0.5;
 const MAX_PORZIONI = 5;
+
+function SelettoreRicetta({
+  ricette,
+  ricettaId,
+  onSeleziona,
+}: {
+  ricette: Doc<"ricette">[];
+  ricettaId: string | null;
+  onSeleziona: (ricettaId: Doc<"ricette">["_id"] | null) => void;
+}) {
+  const selezionata = ricette.find((ricetta) => ricetta._id === ricettaId);
+  const [ricerca, setRicerca] = useState(selezionata?.nome ?? "");
+  const [aperto, setAperto] = useState(false);
+
+  const parole = ricerca.trim().toLocaleLowerCase("it").split(/\s+/).filter(Boolean);
+  const risultati = ricette.filter((ricetta) => {
+    const testo = [
+      ricetta.nome,
+      ...ricetta.tags,
+      ...ricetta.ingredienti.map((ingrediente) => ingrediente.nome),
+    ].join(" ").toLocaleLowerCase("it");
+    return parole.every((parola) => testo.includes(parola));
+  });
+
+  return (
+    <div
+      className="selettore-ricetta"
+      onBlur={(evento) => {
+        if (!evento.currentTarget.contains(evento.relatedTarget)) setAperto(false);
+      }}
+    >
+      <div className="riga">
+        <input
+          className="crescente"
+          type="search"
+          role="combobox"
+          aria-label="Cerca una ricetta"
+          aria-expanded={aperto}
+          autoComplete="off"
+          value={ricerca}
+          placeholder="Cerca una ricetta…"
+          onFocus={() => { setAperto(true); }}
+          onChange={(evento) => {
+            setRicerca(evento.target.value);
+            setAperto(true);
+          }}
+        />
+        {ricettaId !== null && (
+          <button
+            type="button"
+            className="bottone bottone--piccolo"
+            onClick={() => {
+              onSeleziona(null);
+              setRicerca("");
+            }}
+          >
+            Rimuovi
+          </button>
+        )}
+      </div>
+      {aperto && (
+        <div className="selettore-ricetta__risultati">
+          {risultati.length === 0 ? (
+            <span className="dati tenue piccolo">Nessuna ricetta trovata</span>
+          ) : (
+            risultati.map((ricetta) => (
+              <button
+                type="button"
+                key={ricetta._id}
+                aria-current={ricetta._id === ricettaId ? "true" : undefined}
+                onClick={() => {
+                  onSeleziona(ricetta._id);
+                  setRicerca(ricetta.nome);
+                  setAperto(false);
+                }}
+              >
+                <strong>{ricetta.nome}</strong>
+                <span className="dati tenue piccolo">
+                  {ricetta.tempoMinuti !== undefined
+                    ? `${String(ricetta.tempoMinuti)} min · `
+                    : ""}
+                  {ricetta.tags.join(" · ")}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AnteprimaRicetta({ ricetta }: { ricetta: Doc<"ricette"> }) {
+  return (
+    <div className="anteprima-ricetta">
+      <strong>Ingredienti per {ricetta.porzioni}</strong>
+      <ul className="lista dati piccolo">
+        {ricetta.ingredienti.map((ingrediente, indice) => (
+          <li key={`${ingrediente.nome}-${String(indice)}`}>
+            <span className="crescente">{ingrediente.nome}</span>
+            <span className="tenue">
+              {formattaQuantita(ingrediente.quantita, ingrediente.unita)}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {ricetta.preparazione !== undefined && ricetta.preparazione.length > 0 ? (
+        <>
+          <strong>Procedimento</strong>
+          <ol className="passaggi">
+            {ricetta.preparazione.map((passo, indice) => (
+              <li key={`${String(indice)}-${passo}`}>{passo}</li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        <span className="dati tenue piccolo">Procedimento non ancora inserito.</span>
+      )}
+    </div>
+  );
+}
 
 function Slot({
   data,
@@ -52,6 +174,8 @@ function Slot({
   const impostaStato = useMutation(api.pianificatore.impostaStato);
   const impostaRicetta = useMutation(api.pianificatore.impostaRicetta);
   const impostaCommensali = useMutation(api.pianificatore.impostaCommensali);
+  const [mostraAnteprima, setMostraAnteprima] = useState(false);
+  const ricettaSelezionata = ricette.find((ricetta) => ricetta._id === ricettaId);
 
   const alternaCommensale = (nome: string) => {
     const nuovi = commensali.some((c) => c.nome === nome)
@@ -80,9 +204,14 @@ function Slot({
       <div className="riga riga--tra">
         <span className="slot__titolo">{tipoPasto}</span>
         {stato === "pianificato" && nomeRicetta !== null && (
-          <span className="dati piccolo">
+          <button
+            type="button"
+            className="bottone--icona bottone--testo dati piccolo"
+            aria-expanded={mostraAnteprima}
+            onClick={() => { setMostraAnteprima((valore) => !valore); }}
+          >
             {avanzo && <span className="etichetta">avanzo</span>} {nomeRicetta}
-          </span>
+          </button>
         )}
       </div>
 
@@ -103,27 +232,19 @@ function Slot({
 
       {stato !== "fuori" && (
         <>
-          <select
-            value={ricettaId ?? ""}
-            onChange={(e) => {
-              const valore = e.target.value;
-              void impostaRicetta({
-                data,
-                tipoPasto,
-                ricettaId:
-                  valore === ""
-                    ? null
-                    : (valore as Doc<"ricette">["_id"]),
-              });
+          <SelettoreRicetta
+            key={ricettaId ?? "nessuna"}
+            ricette={ricette}
+            ricettaId={ricettaId}
+            onSeleziona={(nuovaRicettaId) => {
+              setMostraAnteprima(false);
+              void impostaRicetta({ data, tipoPasto, ricettaId: nuovaRicettaId });
             }}
-          >
-            <option value="">— scegli una ricetta —</option>
-            {ricette.map((ricetta) => (
-              <option key={ricetta._id} value={ricetta._id}>
-                {ricetta.nome}
-              </option>
-            ))}
-          </select>
+          />
+
+          {mostraAnteprima && ricettaSelezionata !== undefined && (
+            <AnteprimaRicetta ricetta={ricettaSelezionata} />
+          )}
 
           <div className="riga riga--avvolgi">
             {membri.map((membro) => {
@@ -233,6 +354,8 @@ export function Pianificatore({ membri }: { membri: Doc<"householdMembers">[] })
   const [avviso, setAvviso] = useState<string | null>(null);
   const [sprechi, setSprechi] = useState<string[]>([]);
   const [inCorso, setInCorso] = useState(false);
+  const riferimentoOggi = useRef<HTMLDivElement>(null);
+  const settimanaCentrata = useRef<string | null>(null);
 
   const settimana = useQuery(api.pianificatore.settimana, { dataInizio });
   const ricette = useQuery(api.ricette.lista, {});
@@ -303,6 +426,16 @@ export function Pianificatore({ membri }: { membri: Doc<"householdMembers">[] })
 
   const oggi = oggiIso();
 
+  useEffect(() => {
+    if (dataInizio !== lunediDi(oggi) || settimana === undefined) {
+      settimanaCentrata.current = null;
+      return;
+    }
+    if (settimanaCentrata.current === dataInizio) return;
+    settimanaCentrata.current = dataInizio;
+    riferimentoOggi.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [dataInizio, oggi, settimana]);
+
   return (
     <>
       <Carta fitta>
@@ -366,6 +499,7 @@ export function Pianificatore({ membri }: { membri: Doc<"householdMembers">[] })
         settimana.map((giorno) => (
           <div
             key={giorno.data}
+            ref={giorno.data === oggi ? riferimentoOggi : undefined}
             className={giorno.data === oggi ? "giorno giorno--oggi" : "giorno"}
           >
             <div className="giorno__testata">

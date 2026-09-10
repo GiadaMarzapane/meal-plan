@@ -56,6 +56,13 @@ const schemaRisposta = {
               additionalProperties: false,
             },
           },
+          tempoMinuti: { type: "integer", minimum: 1 },
+          preparazione: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 1,
+            description: "passaggi brevi e completi, nell'ordine in cui vanno eseguiti",
+          },
           perche: {
             type: "string",
             description: "una riga sul perché proponi questa ricetta",
@@ -68,6 +75,8 @@ const schemaRisposta = {
           "pastiAdatti",
           "stagioni",
           "ingredienti",
+          "tempoMinuti",
+          "preparazione",
           "perche",
         ],
         additionalProperties: false,
@@ -85,6 +94,8 @@ export type RicettaProposta = {
   pastiAdatti: ("colazione" | "pranzo" | "cena")[];
   stagioni: string[];
   ingredienti: { nome: string; quantita: number; unita: string }[];
+  tempoMinuti: number;
+  preparazione: string[];
   perche: string;
 };
 
@@ -209,6 +220,7 @@ function costruisciPrompt(
       "- Indica le stagioni solo se la ricetta ha davvero senso in certi mesi; altrimenti lascia vuoto.",
       "- Metti `pastiAdatti` coerente: una colazione non va a cena.",
       "- Le quantità devono essere numeriche e realistiche per le porzioni indicate.",
+      "- Indica il tempo totale in minuti e un procedimento completo, con un passaggio per ogni azione principale.",
       "- Nel campo `perche` scrivi una riga concreta, ad esempio «usa la feta che non compare in nessuna ricetta».",
     ].join("\n")
   );

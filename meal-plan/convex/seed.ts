@@ -30,10 +30,15 @@ export const ricette = internalMutation({
         create++;
         continue;
       }
-      // Le ricette già inserite prima che esistesse `pastiAdatti` non sanno a
-      // quale pasto servono: senza questo finirebbero anche a colazione.
-      if (gia.pastiAdatti === undefined) {
-        await ctx.db.patch(gia._id, { pastiAdatti: ricetta.pastiAdatti });
+      // Completa solo i campi introdotti dopo il primo seed, senza sovrascrivere
+      // eventuali modifiche fatte a mano dall'app.
+      const campiMancanti = {
+        ...(gia.pastiAdatti === undefined ? { pastiAdatti: ricetta.pastiAdatti } : {}),
+        ...(gia.tempoMinuti === undefined ? { tempoMinuti: ricetta.tempoMinuti } : {}),
+        ...(gia.preparazione === undefined ? { preparazione: ricetta.preparazione } : {}),
+      };
+      if (Object.keys(campiMancanti).length > 0) {
+        await ctx.db.patch(gia._id, campiMancanti);
         aggiornate++;
       }
     }
