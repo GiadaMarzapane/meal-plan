@@ -80,7 +80,7 @@ function AppAutenticata() {
               onClick={() => { setSezione(voce.chiave); }}
             >
               <voce.Icona size={20} strokeWidth={1.75} aria-hidden="true" />
-              {voce.etichetta}
+              <span>{voce.etichetta}</span>
             </button>
           ))}
         </div>

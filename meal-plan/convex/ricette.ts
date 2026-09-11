@@ -16,6 +16,11 @@ const campiRicetta = {
   note: v.optional(v.string()),
 };
 
+const campiRicettaImport = {
+  slug: v.optional(v.string()),
+  ...campiRicetta,
+};
+
 /** Catalogo ricette. Con `mese` filtra solo quelle di stagione. */
 export const lista = query({
   args: { mese: v.optional(v.string()) },
@@ -45,6 +50,25 @@ export const aggiungi = mutation({
     const householdId = await richiediHousehold(ctx);
     if (args.porzioni <= 0) throw new Error("Le porzioni devono essere almeno 1.");
     return await ctx.db.insert("ricette", { householdId, ...args });
+  },
+});
+
+export const importa = mutation({
+  args: { ricette: v.array(v.object(campiRicettaImport)) },
+  handler: async (ctx, args) => {
+    const householdId = await richiediHousehold(ctx);
+    if (args.ricette.length === 0) throw new Error("Nessuna ricetta da importare.");
+    if (args.ricette.length > 100) {
+      throw new Error("Importa al massimo 100 ricette alla volta.");
+    }
+
+    const ids = [];
+    for (const ricetta of args.ricette) {
+      if (ricetta.nome.trim() === "") throw new Error("Ogni ricetta deve avere un nome.");
+      if (ricetta.porzioni <= 0) throw new Error("Le porzioni devono essere almeno 1.");
+      ids.push(await ctx.db.insert("ricette", { householdId, ...ricetta }));
+    }
+    return { inserite: ids.length };
   },
 });
 

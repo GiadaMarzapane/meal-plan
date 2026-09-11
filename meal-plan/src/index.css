@@ -139,6 +139,12 @@ h3 { font-size: 1.2rem; }
   color: #d5ddce;
   cursor: pointer;
   border-top: 2px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
 }
 
 .barra-nav button[aria-current="page"] {
@@ -249,6 +255,61 @@ button, input, select, textarea {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.ricetta-riga {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spazio);
+}
+
+.ricetta-apri {
+  flex: 1;
+  min-width: 0;
+  padding-left: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.ricetta-azioni {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.ricetta-azione {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ricetta-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: calc(var(--spazio) * 1.25);
+}
+
+.ricetta-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.conferma-elimina {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spazio);
+  padding: var(--spazio);
+  border: 1px solid var(--pomodoro);
+  border-radius: var(--raggio);
+  background: var(--sfondo);
 }
 
 .campo {
@@ -469,6 +530,63 @@ button:focus-visible {
   background: var(--sfondo);
 }
 
+.pasto__testa {
+  display: flex;
+  align-items: center;
+  gap: var(--spazio);
+}
+
+.pasto__tipo {
+  display: inline-flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+  font-family: var(--font-dati);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--testo-tenue);
+}
+
+.pasto__stato {
+  max-width: 220px;
+}
+
+.pasto__apri {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spazio);
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--testo);
+  cursor: pointer;
+  text-align: left;
+}
+
+.pasto__nome {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pasto__commensali {
+  padding-left: calc(var(--spazio) * 2);
+  font-family: var(--font-dati);
+  font-size: 0.75rem;
+  color: var(--testo-tenue);
+}
+
+.pasto__dettaglio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spazio);
+}
+
 .chip-commensale {
   font-family: var(--font-dati);
   font-size: 0.68rem;
@@ -594,6 +712,98 @@ textarea {
   resize: vertical;
   min-height: 120px;
   line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .app {
+    max-width: none;
+  }
+
+  .contenuto {
+    padding-left: var(--spazio);
+    padding-right: var(--spazio);
+  }
+
+  .intestazione {
+    padding: calc(var(--spazio) * 1.5) var(--spazio);
+  }
+
+  .barra-nav button {
+    padding: calc(var(--spazio) * 1.25) 4px;
+  }
+
+  .barra-nav button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .barra-nav svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .giorno__testata {
+    padding-left: var(--spazio);
+    padding-right: var(--spazio);
+  }
+
+  .slot {
+    padding-left: var(--spazio);
+    padding-right: var(--spazio);
+  }
+
+  .pasto__testa {
+    align-items: stretch;
+  }
+
+  .pasto__tipo {
+    min-height: 34px;
+    flex: 0 0 34px;
+    justify-content: center;
+  }
+
+  .pasto__tipo span,
+  .pasto__tipo {
+    overflow: hidden;
+  }
+
+  .pasto__tipo {
+    font-size: 0;
+    letter-spacing: 0;
+  }
+
+  .pasto__tipo svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .pasto__stato {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .ricetta-riga {
+    align-items: flex-start;
+  }
+
+  .ricetta-apri {
+    font-size: 1.18rem;
+  }
+
+  .ricetta-azione {
+    width: 36px;
+    min-width: 36px;
+  }
+
+  .conferma-elimina {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
 /* Passaggi di preparazione: numerati, con il numero in monospace come i dati */

@@ -1,4 +1,5 @@
 import { useAction, useMutation, useQuery } from "convex/react";
+import { Pencil, Timer, Trash2, User } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
@@ -320,6 +321,7 @@ function VoceRicetta({ ricetta }: { ricetta: Doc<"ricette"> }) {
   const rimuovi = useMutation(api.ricette.rimuovi);
   const [aperta, setAperta] = useState(false);
   const [inModifica, setInModifica] = useState(false);
+  const [confermaElimina, setConfermaElimina] = useState(false);
 
   if (inModifica) {
     return (
@@ -336,38 +338,71 @@ function VoceRicetta({ ricetta }: { ricetta: Doc<"ricette"> }) {
 
   return (
     <li className="colonna" style={{ alignItems: "stretch" }}>
-      <div className="riga">
+      <div className="ricetta-riga">
         <button
           type="button"
-          className="bottone--icona bottone--ui crescente"
-          style={{ textAlign: "left" }}
+          className="bottone--icona bottone--ui ricetta-apri"
           aria-expanded={aperta}
           onClick={() => { setAperta((v) => !v); }}
         >
           <strong>{ricetta.nome}</strong>
-          <span className="dati tenue piccolo">
-            {" "}
-            · {ricetta.porzioni} porz.
-            {ricetta.tempoMinuti !== undefined && ` · ${String(ricetta.tempoMinuti)} min`}
-          </span>
         </button>
-        <button
-          type="button"
-          className="bottone--icona bottone--testo"
-          aria-label={`Modifica ${ricetta.nome}`}
-          onClick={() => { setInModifica(true); }}
-        >
-          modifica
-        </button>
-        <button
-          type="button"
-          className="bottone--icona"
-          aria-label={`Elimina ${ricetta.nome}`}
-          onClick={() => { void rimuovi({ ricettaId: ricetta._id }); }}
-        >
-          ✕
-        </button>
+        <div className="ricetta-azioni">
+          <button
+            type="button"
+            className="bottone--icona ricetta-azione"
+            aria-label={`Modifica ${ricetta.nome}`}
+            onClick={() => { setInModifica(true); }}
+          >
+            <Pencil size={18} strokeWidth={1.85} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="bottone--icona ricetta-azione"
+            aria-label={`Elimina ${ricetta.nome}`}
+            onClick={() => { setConfermaElimina(true); }}
+          >
+            <Trash2 size={18} strokeWidth={1.85} aria-hidden="true" />
+          </button>
+        </div>
       </div>
+
+      <div className="ricetta-meta dati tenue piccolo">
+        <span>
+          <User size={15} strokeWidth={1.8} aria-hidden="true" />
+          x{ricetta.porzioni}
+        </span>
+        {ricetta.tempoMinuti !== undefined && (
+          <span>
+            <Timer size={15} strokeWidth={1.8} aria-hidden="true" />
+            {ricetta.tempoMinuti} min
+          </span>
+        )}
+      </div>
+
+      {confermaElimina && (
+        <div className="conferma-elimina" role="alertdialog" aria-modal="false">
+          <span className="dati piccolo">
+            Eliminare <strong>{ricetta.nome}</strong>?
+          </span>
+          <div className="riga">
+            <button
+              type="button"
+              className="bottone bottone--piccolo bottone--primario"
+              onClick={() => { void rimuovi({ ricettaId: ricetta._id }); }}
+            >
+              Elimina
+            </button>
+            <button
+              type="button"
+              className="bottone bottone--piccolo"
+              onClick={() => { setConfermaElimina(false); }}
+            >
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="riga riga--avvolgi">
         {ricetta.tags.map((tag) => (
