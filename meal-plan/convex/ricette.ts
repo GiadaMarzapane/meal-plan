@@ -26,10 +26,14 @@ export const lista = query({
       .withIndex("by_household", (q) => q.eq("householdId", householdId))
       .collect();
 
-    if (args.mese === undefined) return ricette;
+    // Ordine alfabetico: è l'unico che rende scorribile un catalogo lungo,
+    // e vale per tutti i consumatori (elenco, tendina del pianificatore).
+    const ordinate = [...ricette].sort((a, b) => a.nome.localeCompare(b.nome, "it"));
+
+    if (args.mese === undefined) return ordinate;
     const mese = args.mese.toLowerCase();
     // stagioni vuoto = ricetta valida tutto l'anno
-    return ricette.filter(
+    return ordinate.filter(
       (r) => r.stagioni.length === 0 || r.stagioni.includes(mese)
     );
   },

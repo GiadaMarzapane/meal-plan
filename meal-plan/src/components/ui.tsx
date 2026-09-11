@@ -5,14 +5,19 @@ export function Carta({
   azione,
   children,
   fitta = false,
+  classe,
 }: {
   titolo?: string;
   azione?: ReactNode;
   children: ReactNode;
   fitta?: boolean;
+  classe?: string;
 }) {
+  const classi = ["carta", fitta ? "carta--fitta" : null, classe ?? null]
+    .filter((c) => c !== null)
+    .join(" ");
   return (
-    <section className={fitta ? "carta carta--fitta" : "carta"}>
+    <section className={classi}>
       {titolo !== undefined && (
         <>
           <div className="riga riga--tra">

@@ -10,6 +10,9 @@ import { Campo, Carta, Errore, Vuoto } from "./ui";
 
 type Urgenza = "urgente" | "attenzione" | "ok";
 
+/** Unità ammesse in dispensa: sono quelle che la lista della spesa sa sottrarre. */
+const UNITA_DISPENSA = ["g", "kg", "ml", "l", "pz"] as const;
+
 /** Id della lista di nomi generici suggeriti. */
 const ID_INGREDIENTI = "nomi-ingredienti-ricette";
 
@@ -133,20 +136,19 @@ function ModuloProdotto({
           />
         </Campo>
         <Campo etichetta="Unità">
-          <input
-            type="text"
+          <select
             value={unita}
-            placeholder="g"
-            list="unita-comuni"
             onChange={(e) => { setUnita(e.target.value); }}
-          />
+          >
+            <option value="">—</option>
+            {UNITA_DISPENSA.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
         </Campo>
       </div>
-      <datalist id="unita-comuni">
-        <option value="g" />
-        <option value="ml" />
-        <option value="pz" />
-      </datalist>
       <span className="dati tenue piccolo">
         3 confezioni di passata da 700 g = pezzi 3, contenuto 700, unità g.
         Per le uova basta pezzi 6 e unità pz.

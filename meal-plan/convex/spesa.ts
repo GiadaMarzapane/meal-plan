@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import {
+  inUnitaBase,
   isoPiuGiorni,
   nomiProdotto,
   normalizzaNome,
@@ -131,11 +132,15 @@ export const genera = mutation({
       if (porzioniTotali <= 0) continue;
       const fattore = porzioniTotali / ricetta.porzioni;
       for (const ing of ricetta.ingredienti) {
-        const k = chiave(ing.nome, ing.unita);
+        // Chilogrammi e litri diventano grammi e millilitri: così le quantità
+        // si sommano e si sottraggono anche se ricetta e dispensa usano
+        // multipli diversi della stessa unità.
+        const base = inUnitaBase(ing.quantita, ing.unita);
+        const k = chiave(ing.nome, base.unita);
         const corrente = necessario.get(k);
-        const aggiunta = ing.quantita === undefined ? undefined : ing.quantita * fattore;
+        const aggiunta = base.quantita === undefined ? undefined : base.quantita * fattore;
         if (corrente === undefined) {
-          necessario.set(k, { nome: ing.nome, quantita: aggiunta, unita: ing.unita });
+          necessario.set(k, { nome: ing.nome, quantita: aggiunta, unita: base.unita });
         } else if (corrente.quantita !== undefined && aggiunta !== undefined) {
           corrente.quantita += aggiunta;
         } else {
@@ -153,12 +158,13 @@ export const genera = mutation({
     for (const prodotto of frigo) {
       // Il prodotto copre sia il suo nome sia quello generico: 500 g di fusilli
       // valgono per una ricetta che chiede "pasta".
+      const scorta = inUnitaBase(scortaTotale(prodotto), prodotto.unita);
       for (const nome of nomiProdotto(prodotto)) {
-        const k = `${nome}::${prodotto.unita ?? ""}`;
+        const k = `${nome}::${scorta.unita ?? ""}`;
         const voce = necessario.get(k);
         if (voce === undefined) continue;
 
-        const disponibile = scortaTotale(prodotto);
+        const disponibile = scorta.quantita;
         if (disponibile === undefined || voce.quantita === undefined) {
           // Non so quanto ce n'è: assumo che basti e tolgo la voce.
           necessario.delete(k);

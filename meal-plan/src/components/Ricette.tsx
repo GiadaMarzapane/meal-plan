@@ -2,7 +2,7 @@ import { useAction, useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
-import {MESI, meseDiIso, oggiIso} from "../lib/date";
+import { MESI, meseDiIso, oggiIso, stagioneDiMese } from "../lib/date";
 import { formattaQuantita } from "../lib/quantita";
 import { messaggioErrore } from "../lib/errori";
 import type { ChiaveMacro, Macro } from "../lib/macro";
@@ -12,6 +12,13 @@ import { Campo, Carta, Errore, Vuoto } from "./ui";
 type RigaIngrediente = { nome: string; quantita: string; unita: string };
 
 const RIGA_VUOTA: RigaIngrediente = { nome: "", quantita: "", unita: "" };
+
+/**
+ * Unità ammesse negli ingredienti. Le prime tre sono quelle che la lista della
+ * spesa sa sommare e sottrarre dalla dispensa; cucchiai e "q.b." servono al
+ * catalogo importato e restano fuori dai conti.
+ */
+const UNITA_INGREDIENTE = ["g", "kg", "ml", "l", "pz", "cucchiaio", "cucchiaino", "q.b."] as const;
 
 const PASTI = [
   { valore: "colazione", etichetta: "colazione" },
@@ -195,12 +202,18 @@ function ModuloRicetta({
               placeholder="400"
               onChange={(e) => { cambiaRiga(indice, "quantita", e.target.value); }}
             />
-            <input
-              type="text"
+            <select
               value={riga.unita}
-              placeholder="g"
+              aria-label={`Unità dell'ingrediente ${String(indice + 1)}`}
               onChange={(e) => { cambiaRiga(indice, "unita", e.target.value); }}
-            />
+            >
+              <option value="">—</option>
+              {UNITA_INGREDIENTE.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
           </div>
         ))}
         <button
@@ -597,7 +610,10 @@ export function Ricette() {
         ))}
       </datalist>
 
-      <Carta titolo={`Di stagione a ${meseCorrente}`}>
+      <Carta
+        titolo={`Di stagione a ${meseCorrente}`}
+        classe={`stagione stagione--${stagioneDiMese(meseCorrente)}`}
+      >
         {stagionalita === undefined ? (
           <p className="dati tenue">Carico…</p>
         ) : (
@@ -635,30 +651,32 @@ export function Ricette() {
           </>
         )}
 
-        <div className="gruppo-stato">
-          <button
-            type="button"
-            aria-pressed={!soloStagionali}
-            onClick={() => { setSoloStagionali(false); }}
-          >
-            Tutte
-          </button>
-          <button
-            type="button"
-            aria-pressed={soloStagionali}
-            onClick={() => { setSoloStagionali(true); }}
-          >
-            Solo stagionali
-          </button>
-        </div>
+        <div className="colonna">
+          <div className="gruppo-stato">
+            <button
+              type="button"
+              aria-pressed={!soloStagionali}
+              onClick={() => { setSoloStagionali(false); }}
+            >
+              Tutte
+            </button>
+            <button
+              type="button"
+              aria-pressed={soloStagionali}
+              onClick={() => { setSoloStagionali(true); }}
+            >
+              Solo stagionali
+            </button>
+          </div>
 
-        <input
-          type="search"
-          value={ricerca}
-          aria-label="Cerca nel ricettario"
-          placeholder="Cerca per nome, ingrediente o tag…"
-          onChange={(e) => { setRicerca(e.target.value); }}
-        />
+          <input
+            type="search"
+            value={ricerca}
+            aria-label="Cerca nel ricettario"
+            placeholder="Cerca per nome, ingrediente o tag…"
+            onChange={(e) => { setRicerca(e.target.value); }}
+          />
+        </div>
 
         {ricette === undefined ? (
           <p className="dati tenue">Carico…</p>

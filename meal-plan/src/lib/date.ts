@@ -71,3 +71,17 @@ export function etichettaData(iso: string): string {
   const data = new Date(`${iso}T00:00:00.000Z`);
   return `${data.getUTCDate()} ${MESI[data.getUTCMonth()].slice(0, 3)}`;
 }
+
+export type Stagione = "inverno" | "primavera" | "estate" | "autunno";
+
+const STAGIONE_DI_MESE: Record<string, Stagione> = {
+  dicembre: "inverno", gennaio: "inverno", febbraio: "inverno",
+  marzo: "primavera", aprile: "primavera", maggio: "primavera",
+  giugno: "estate", luglio: "estate", agosto: "estate",
+  settembre: "autunno", ottobre: "autunno", novembre: "autunno",
+};
+
+/** La stagione a cui appartiene un mese italiano. */
+export function stagioneDiMese(mese: string): Stagione {
+  return STAGIONE_DI_MESE[mese.toLowerCase()] ?? "inverno";
+}

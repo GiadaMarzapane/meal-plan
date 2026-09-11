@@ -32,6 +32,28 @@ export function isoPiuGiorni(iso: string, giorni: number): string {
   return base.toISOString().slice(0, 10);
 }
 
+/**
+ * Riporta una quantità all'unità di base della sua famiglia: i chilogrammi
+ * diventano grammi e i litri millilitri.
+ *
+ * Serve perché i confronti fra ricetta e dispensa avvengono su nome + unità:
+ * senza questa riduzione 1 kg di pasta in dispensa non coprirebbe i 500 g
+ * chiesti da una ricetta, perché "kg" e "g" sarebbero due chiavi diverse.
+ */
+export function inUnitaBase(
+  quantita: number | undefined,
+  unita: string | undefined
+): { quantita: number | undefined; unita: string | undefined } {
+  const u = unita?.trim().toLowerCase();
+  if (u === "kg") {
+    return { quantita: quantita === undefined ? undefined : quantita * 1000, unita: "g" };
+  }
+  if (u === "l") {
+    return { quantita: quantita === undefined ? undefined : quantita * 1000, unita: "ml" };
+  }
+  return { quantita, unita };
+}
+
 /** Normalizza un nome ingrediente/prodotto per confrontarlo (spesa vs frigo). */
 export function normalizzaNome(nome: string): string {
   return nome.trim().toLowerCase().replace(/\s+/g, " ");
@@ -118,10 +140,11 @@ export function consumaDallaDispensa(
     const scorta = dispensa.get(chiave);
     if (scorta === undefined) continue;
 
+    const richiesto = inUnitaBase(ingrediente.quantita, ingrediente.unita);
     const serve =
-      ingrediente.quantita === undefined ? undefined : ingrediente.quantita * fattore;
+      richiesto.quantita === undefined ? undefined : richiesto.quantita * fattore;
     const rimasto = scorta.rimasto;
-    const stessaUnita = (ingrediente.unita ?? "") === (scorta.unita ?? "");
+    const stessaUnita = (richiesto.unita ?? "") === (scorta.unita ?? "");
 
     dispensa.set(chiave, {
       ...scorta,
@@ -160,7 +183,8 @@ export function costruisciDispensa(
   for (const prodotto of prodotti) {
     const urgente =
       prodotto.dataScadenza !== undefined && prodotto.dataScadenza <= limite;
-    const totale = scortaTotale(prodotto);
+    const base = inUnitaBase(scortaTotale(prodotto), prodotto.unita);
+    const totale = base.quantita;
 
     for (const chiave of nomiProdotto(prodotto)) {
       const precedente = dispensa.get(chiave);
@@ -171,7 +195,7 @@ export function costruisciDispensa(
             : precedente.rimasto === undefined || totale === undefined
               ? undefined
               : precedente.rimasto + totale,
-        unita: prodotto.unita,
+        unita: base.unita,
         urgente: urgente || (precedente?.urgente ?? false),
       });
     }
@@ -201,17 +225,18 @@ export function analizzaCopertura(
 
   for (const ingrediente of ingredienti) {
     const scorta = dispensa.get(normalizzaNome(ingrediente.nome));
+    const richiesto = inUnitaBase(ingrediente.quantita, ingrediente.unita);
     const serve =
-      ingrediente.quantita === undefined ? undefined : ingrediente.quantita * fattore;
+      richiesto.quantita === undefined ? undefined : richiesto.quantita * fattore;
 
     if (scorta === undefined) {
-      mancanti.push({ ...ingrediente, quantita: serve });
+      mancanti.push({ ...ingrediente, quantita: serve, unita: richiesto.unita });
       continue;
     }
 
     if (scorta.urgente) urgentiUsati.push(ingrediente.nome);
 
-    const stessaUnita = (ingrediente.unita ?? "") === (scorta.unita ?? "");
+    const stessaUnita = (richiesto.unita ?? "") === (scorta.unita ?? "");
     const bastano =
       serve === undefined || scorta.rimasto === undefined || !stessaUnita
         ? true // non so fare il conto: assumo che basti, come fa la lista spesa
@@ -222,6 +247,7 @@ export function analizzaCopertura(
     } else {
       mancanti.push({
         ...ingrediente,
+        unita: richiesto.unita,
         quantita:
           serve === undefined || scorta.rimasto === undefined
             ? serve

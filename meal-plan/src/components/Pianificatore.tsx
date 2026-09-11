@@ -1,5 +1,6 @@
 import { useAction, useMutation, useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronRight, Coffee, Salad, Soup } from "lucide-react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import { etichettaGiorno, isoPiuGiorni, lunediDi, meseDiIso, oggiIso } from "../lib/date";
@@ -24,6 +25,13 @@ const STATI = [
 type Stato = (typeof STATI)[number]["valore"];
 type Tipo = "colazione" | "pranzo" | "cena";
 type Commensale = { nome: string; porzioni: number };
+
+/** Un'icona e un colore per ciascun pasto, per riconoscerli a colpo d'occhio. */
+const ASPETTO_PASTO = {
+  colazione: { Icona: Coffee, etichetta: "Colazione" },
+  pranzo: { Icona: Salad, etichetta: "Pranzo" },
+  cena: { Icona: Soup, etichetta: "Cena" },
+} as const;
 
 /** Passo dello stepper: mezze porzioni bastano per una dieta di casa. */
 const PASSO_PORZIONI = 0.5;
@@ -98,6 +106,11 @@ function SelettoreRicetta({
                 type="button"
                 key={ricetta._id}
                 aria-current={ricetta._id === ricettaId ? "true" : undefined}
+                // Su touch il dito toglie il fuoco all'input prima che scatti
+                // il click: `onBlur` smonterebbe la tendina e il click andrebbe
+                // perso. Bloccando il default del pointerdown il fuoco non si
+                // sposta e la selezione arriva.
+                onPointerDown={(evento) => { evento.preventDefault(); }}
                 onClick={() => {
                   onSeleziona(ricetta._id);
                   setRicerca(ricetta.nome);
@@ -199,52 +212,81 @@ function Slot({
     void impostaCommensali({ data, tipoPasto, commensali: nuovi });
   };
 
+  const { Icona, etichetta } = ASPETTO_PASTO[tipoPasto];
+  const fuori = stato === "fuori";
+
+  // Riepilogo dei commensali sulla riga chiusa: l'informazione resta visibile
+  // senza aprire, i controlli stanno nel dettaglio.
+  const riepilogoCommensali = commensali
+    .map((c) => (c.porzioni === 1 ? c.nome : `${c.nome} ×${arrotonda(c.porzioni)}`))
+    .join(" · ");
+
   return (
-    <div className={stato === "fuori" ? "slot slot--fuori" : "slot"}>
-      <div className="riga riga--tra">
-        <span className="slot__titolo">{tipoPasto}</span>
-        {stato === "pianificato" && nomeRicetta !== null && (
-          <button
-            type="button"
-            className="bottone--icona bottone--testo dati piccolo"
-            aria-expanded={mostraAnteprima}
-            onClick={() => { setMostraAnteprima((valore) => !valore); }}
-          >
-            {avanzo && <span className="etichetta">avanzo</span>} {nomeRicetta}
-          </button>
+    <div className={fuori ? "pasto pasto--fuori" : "pasto"}>
+      <div className="pasto__testa">
+        <span className={`pasto__tipo pasto__tipo--${tipoPasto}`}>
+          <Icona size={16} strokeWidth={1.75} aria-hidden="true" />
+          {etichetta}
+        </span>
+
+        <select
+          className="pasto__stato"
+          value={stato}
+          aria-label={`Stato di ${etichetta} del ${data}`}
+          onChange={(evento) => {
+            void impostaStato({
+              data,
+              tipoPasto,
+              stato: evento.target.value as Stato,
+            });
+          }}
+        >
+          {STATI.map((opzione) => (
+            <option key={opzione.valore} value={opzione.valore}>
+              {opzione.etichetta}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <button
+        type="button"
+        className="pasto__apri"
+          aria-expanded={mostraAnteprima}
+          onClick={() => { setMostraAnteprima((v) => !v); }}
+        >
+          <span className="pasto__nome">
+            {fuori ? (
+              <span className="tenue">—</span>
+            ) : nomeRicetta === null ? (
+              <span className="tenue">Scegli una ricetta</span>
+            ) : (
+              <>
+                {avanzo && <span className="etichetta">avanzo</span>} {nomeRicetta}
+              </>
+            )}
+          </span>
+        {mostraAnteprima ? (
+          <ChevronDown size={18} strokeWidth={1.75} aria-hidden="true" />
+        ) : (
+          <ChevronRight size={18} strokeWidth={1.75} aria-hidden="true" />
         )}
-      </div>
+      </button>
 
-      <div className="gruppo-stato">
-        {STATI.map((opzione) => (
-          <button
-            key={opzione.valore}
-            type="button"
-            aria-pressed={stato === opzione.valore}
-            onClick={() => {
-              void impostaStato({ data, tipoPasto, stato: opzione.valore });
-            }}
-          >
-            {opzione.etichetta}
-          </button>
-        ))}
-      </div>
+      {!fuori && riepilogoCommensali !== "" && !mostraAnteprima && (
+        <span className="pasto__commensali">{riepilogoCommensali}</span>
+      )}
 
-      {stato !== "fuori" && (
-        <>
+      {mostraAnteprima && !fuori && (
+        <div className="pasto__dettaglio">
           <SelettoreRicetta
             key={ricettaId ?? "nessuna"}
             ricette={ricette}
             ricettaId={ricettaId}
             onSeleziona={(nuovaRicettaId) => {
-              setMostraAnteprima(false);
               void impostaRicetta({ data, tipoPasto, ricettaId: nuovaRicettaId });
             }}
           />
-
-          {mostraAnteprima && ricettaSelezionata !== undefined && (
-            <AnteprimaRicetta ricetta={ricettaSelezionata} />
-          )}
 
           <div className="riga riga--avvolgi">
             {membri.map((membro) => {
@@ -290,17 +332,16 @@ function Slot({
               );
             })}
           </div>
-        </>
+
+          {ricettaSelezionata !== undefined && (
+            <AnteprimaRicetta ricetta={ricettaSelezionata} />
+          )}
+        </div>
       )}
     </div>
   );
 }
 
-/**
- * Riepilogo per chi segue una dieta: quanto porta a casa dai pasti pianificati
- * del giorno rispetto all'obiettivo. Conta solo pranzo e cena — colazione e
- * spuntini l'app non li conosce, e il testo lo dice.
- */
 function RiepilogoMacro({
   membro,
   pasti,

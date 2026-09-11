@@ -1,5 +1,13 @@
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { useState } from "react";
+import {
+  BookOpen,
+  ChefHat,
+  Clock,
+  Refrigerator,
+  ShoppingCart,
+  Users,
+} from "lucide-react";
 import { api } from "../convex/_generated/api";
 import { Accesso } from "./components/Accesso";
 import { CucinaOra } from "./components/CucinaOra";
@@ -11,12 +19,12 @@ import { Ricette } from "./components/Ricette";
 import { Spesa } from "./components/Spesa";
 
 const SEZIONI = [
-  { chiave: "menu", etichetta: "Menu" },
-  { chiave: "ora", etichetta: "Ora" },
-  { chiave: "spesa", etichetta: "Spesa" },
-  { chiave: "frigo", etichetta: "Frigo" },
-  { chiave: "ricette", etichetta: "Ricette" },
-  { chiave: "gruppo", etichetta: "Gruppo" },
+  { chiave: "menu", etichetta: "Menu", Icona: ChefHat },
+  { chiave: "ora", etichetta: "Ora", Icona: Clock },
+  { chiave: "spesa", etichetta: "Spesa", Icona: ShoppingCart },
+  { chiave: "frigo", etichetta: "Frigo", Icona: Refrigerator },
+  { chiave: "ricette", etichetta: "Ricette", Icona: BookOpen },
+  { chiave: "gruppo", etichetta: "Gruppo", Icona: Users },
 ] as const;
 
 type Sezione = (typeof SEZIONI)[number]["chiave"];
@@ -71,6 +79,7 @@ function AppAutenticata() {
               aria-current={sezione === voce.chiave ? "page" : undefined}
               onClick={() => { setSezione(voce.chiave); }}
             >
+              <voce.Icona size={20} strokeWidth={1.75} aria-hidden="true" />
               {voce.etichetta}
             </button>
           ))}

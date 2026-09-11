@@ -112,8 +112,11 @@ h3 { font-size: 1.2rem; }
   left: 0;
   right: 0;
   display: flex;
-  background: var(--sfondo-carta);
-  border-top: 1px dashed var(--bordo);
+  /* Verde salvia, non pomodoro: la barra è cornice, non un'azione. Dandole lo
+     stesso rosso del bottone principale il rosso smetterebbe di voler dire
+     "premi qui". */
+  background: var(--salvia);
+  border-top: 1px solid var(--salvia);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -133,14 +136,14 @@ h3 { font-size: 1.2rem; }
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--testo-tenue);
+  color: #d5ddce;
   cursor: pointer;
   border-top: 2px solid transparent;
 }
 
 .barra-nav button[aria-current="page"] {
-  color: var(--pomodoro);
-  border-top-color: var(--pomodoro);
+  color: #fff;
+  border-top-color: var(--senape);
 }
 
 /* --- Carta / scontrino ----------------------------------------------------- */
@@ -607,4 +610,171 @@ textarea {
   font-family: var(--font-dati);
   font-size: 0.75rem;
   color: var(--testo-tenue);
+}
+
+/* --- Scheda "di stagione": motivo di sfondo che cambia con la stagione ------
+   Disegni a linea, non fotografie: restano coerenti con il tratto scritto a
+   mano e non rubano leggibilità alle etichette sopra. */
+.stagione {
+  background-repeat: repeat;
+  background-position: center;
+  background-size: 88px 88px;
+}
+
+/* primavera — germogli */
+.stagione--primavera {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' fill='none' stroke='%235F7350' stroke-opacity='0.22' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M22 62c0-10 2-18 6-24'/%3E%3Cpath d='M28 44c-7-3-11 1-12 7 6 2 11-1 12-7z'/%3E%3Cpath d='M29 52c6-4 11-1 12 5-6 3-11 1-12-5z'/%3E%3Cpath d='M66 30v18'/%3E%3Cpath d='M66 34c5-2 8 1 8 5-4 2-8 0-8-5z'/%3E%3C/svg%3E");
+}
+
+/* estate — pomodori e sole */
+.stagione--estate {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' fill='none' stroke='%23C1432B' stroke-opacity='0.20' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='24' cy='30' r='10'/%3E%3Cpath d='M24 20v-5M19 21l-4-3M29 21l4-3'/%3E%3Ccircle cx='62' cy='60' r='8'/%3E%3Cpath d='M62 52v-4'/%3E%3Cpath d='M58 14h0M70 26h0'/%3E%3C/svg%3E");
+}
+
+/* autunno — foglie e zucca */
+.stagione--autunno {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' fill='none' stroke='%23D9A02C' stroke-opacity='0.30' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M20 52c0-12 8-20 20-22-1 13-8 21-20 22z'/%3E%3Cpath d='M20 52l14-15'/%3E%3Cellipse cx='64' cy='30' rx='11' ry='9'/%3E%3Cpath d='M64 21v-5M58 30c0-6 2-9 6-9s6 3 6 9'/%3E%3C/svg%3E");
+}
+
+/* inverno — verza e rametto spoglio */
+.stagione--inverno {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' fill='none' stroke='%236F6558' stroke-opacity='0.22' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='26' cy='32' r='11'/%3E%3Cpath d='M26 21v22M15 32h22M18 24l16 16M34 24L18 40'/%3E%3Cpath d='M64 66V44'/%3E%3Cpath d='M64 56l7-7M64 50l-7-7'/%3E%3C/svg%3E");
+}
+
+/* --- Riga compatta del pasto ------------------------------------------------
+   Ventuno pasti a settimana: se ogni slot è un blocco alto la settimana non si
+   legge. Qui la riga sta su una riga sola e i controlli stanno nel dettaglio
+   che si apre toccandola. */
+.pasto {
+  padding: calc(var(--spazio) * 0.75) calc(var(--spazio) * 1.25);
+  border-bottom: 1px dashed var(--bordo);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pasto:last-child { border-bottom: none; }
+.pasto--fuori { opacity: 0.55; }
+
+.pasto__riga {
+  display: flex;
+  align-items: center;
+  gap: var(--spazio);
+}
+
+/* Visibile solo da tablet in su. Su schermi stretti esce dal flusso ma resta
+   nel DOM: nascondere con display:none la toglierebbe anche ai lettori di
+   schermo, e "Colazione" è l'unica cosa che spiega l'icona. */
+.da-640 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .da-640 {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+}
+
+/* Larghezza fissa: con targhette di misura diversa i nomi delle ricette non
+   si allineano e la colonna sembra storta. Su mobile basta lo spazio
+   dell'icona, da 640px in su ci sta anche la parola più lunga. */
+.pasto__tipo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: none;
+  width: 34px;
+  padding: 5px 0;
+  border-radius: var(--raggio);
+  font-family: var(--font-dati);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+@media (min-width: 640px) {
+  .pasto__tipo {
+    width: 116px;
+    justify-content: flex-start;
+    padding: 5px 8px;
+  }
+}
+
+.pasto__tipo--colazione { background: #f6e2dd; color: #8e3521; }
+.pasto__tipo--pranzo { background: #e2e8dc; color: #46573b; }
+.pasto__tipo--cena { background: #f6ead2; color: #8a6416; }
+
+.pasto__stato {
+  flex: none;
+  width: 116px;
+  padding: 5px 4px;
+  font-family: var(--font-dati);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-style: dashed;
+  background: transparent;
+  color: var(--testo-tenue);
+}
+
+.pasto__apri {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  padding: 2px 0;
+  text-align: left;
+  cursor: pointer;
+  color: var(--testo);
+}
+
+.pasto__apri svg { flex: none; color: var(--testo-tenue); }
+
+.pasto__nome {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.pasto__commensali {
+  font-family: var(--font-dati);
+  font-size: 0.66rem;
+  color: var(--testo-tenue);
+  padding-left: 42px;
+}
+
+@media (min-width: 640px) {
+  .pasto__commensali { padding-left: 132px; }
+}
+
+.pasto__dettaglio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spazio);
+  padding: var(--spazio) 0 calc(var(--spazio) * 0.5);
+}
+
+/* Icone nella barra di navigazione: sopra l'etichetta, non accanto */
+.barra-nav button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  padding: 9px 2px calc(var(--spazio) * 1.25);
 }
